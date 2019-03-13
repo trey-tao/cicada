@@ -1,7 +1,7 @@
 
 <div align="center">  
 
-<img src="https://ws3.sinaimg.cn/large/006tNbRwly1fuvfxbc7y1j30go0e9aay.jpg" width="300"/> 
+<img src="https://ws3.sinaimg.cn/large/006tNbRwly1fxda6k9k3bj30oy08cjsx.jpg"  /> 
 <br/>
 
 [![Build Status](https://travis-ci.org/crossoverJie/cicada.svg?branch=master)](https://travis-ci.org/crossoverJie/cicada)
@@ -32,14 +32,14 @@ If you are interested, please click [Star](https://github.com/crossoverJie/cicad
 
 - [x] Clean code, without too much dependency.
 - [x] One line of code to start the HTTP service.
-- [x] Custom interceptor.
+- [x] [Custom interceptor](#custom-interceptor).
 - [x] Flexible parameters way.
 - [x] Response `json`.
 - [x] Start with `jar`.
-- [x] Custom configuration.
+- [x] [Custom configuration](#custom-configuration).
 - [x] Multiple response ways.
 - [x] Pluggable `IOC` beanFactory。
-- [ ] Support `Cookie`.
+- [x] [Support `Cookie`](#cookie).
 - [ ] File Upload.
 
 
@@ -52,7 +52,7 @@ Create a project with `Maven`, import core dependency.
 <dependency>
     <groupId>top.crossoverjie.opensource</groupId>
     <artifactId>cicada-core</artifactId>
-    <version>2.0.0</version>
+    <version>x.y.z</version>
 </dependency>
 ```
 
@@ -120,22 +120,52 @@ Launch and apply access: [http://127.0.0.1:5688/cicada-example/routeAction/getUs
 Through `context.json(), context.text()`, you can choose different response ways.
 
 ```java
-@CicadaAction("textAction")
-public class TextAction implements WorkAction {
-    @Override
-    public void execute(CicadaContext context, Param param) throws Exception {
+@CicadaAction("routeAction")
+public class RouteAction {
+
+    private static final Logger LOGGER = LoggerBuilder.getLogger(RouteAction.class);
+
+    @CicadaRoute("getUser")
+    public void getUser(DemoReq req){
+
+        LOGGER.info(req.toString());
+        WorkRes<DemoReq> reqWorkRes = new WorkRes<>() ;
+        reqWorkRes.setMessage("hello =" + req.getName());
+        CicadaContext.getContext().json(reqWorkRes) ;
+    }
+    
+    @CicadaRoute("hello")
+    public void hello() throws Exception {
+        CicadaContext context = CicadaContext.getContext();
+
         String url = context.request().getUrl();
         String method = context.request().getMethod();
         context.text("hello world url=" + url + " method=" + method);
-    }
+    }    
+
+
 }
 ```
 
-![](https://ws1.sinaimg.cn/large/006tNbRwly1fvxvvo8yioj313i0tudij.jpg)
 
-At the same time, you can also get other information in the request context through `context.request()`.
+## Cookie Support
 
-![](https://ws2.sinaimg.cn/large/006tNbRwly1fvxvxmpsjcj30yy0yo77h.jpg)
+### Set Cookie
+
+```java
+Cookie cookie = new Cookie() ;
+cookie.setName("cookie");
+cookie.setValue("value");
+CicadaContext.getResponse().setCookie(cookie);
+```
+
+### Get Cookie
+
+```java
+Cookie cookie = CicadaContext.getRequest().getCookie("cookie");
+logger.info("cookie = " + cookie.toString());
+```
+
 
 ## Custom configuration
 
@@ -215,8 +245,9 @@ public class ExecuteTimeInterceptor implements CicadaInterceptor {
     private Long end;
 
     @Override
-    public void before(Param param) {
+    public boolean before(Param param) {
         start = System.currentTimeMillis();
+        return true;
     }
 
     @Override
@@ -228,23 +259,6 @@ public class ExecuteTimeInterceptor implements CicadaInterceptor {
 }
 ```
 
-### Interceptor Adapter
-
-If you only want to implement one of the methods ,only extends `top.crossoverjie.cicada.server.intercept.AbstractCicadaInterceptorAdapter` abstract class.
-
-```java
-@Interceptor(value = "loggerInterceptor")
-public class LoggerInterceptorAbstract extends AbstractCicadaInterceptorAdapter {
-
-    private static final Logger LOGGER = LoggerBuilder.getLogger(LoggerInterceptorAbstract.class) ;
-
-    @Override
-    public void before(Param param) {
-        LOGGER.info("logger param=[{}]",param.toString());
-    }
-
-}
-```
 
 ## Performance Test
 
@@ -256,6 +270,11 @@ public class LoggerInterceptorAbstract extends AbstractCicadaInterceptorAdapter 
 
 
 ## ChangeLog
+
+### v2.0.1
+- Logo.
+- Cookie Support.
+- Beautify the log.
 
 ### v2.0.0
 - Fixed [#12](https://github.com/TogetherOS/cicada/issues/12) [#22](https://github.com/TogetherOS/cicada/issues/22) [#28](28)

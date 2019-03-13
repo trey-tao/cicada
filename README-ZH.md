@@ -1,7 +1,7 @@
 
 <div align="center">  
 
-<img src="https://ws3.sinaimg.cn/large/006tNbRwly1fuvfxbc7y1j30go0e9aay.jpg" width="300"/> 
+<img src="https://ws3.sinaimg.cn/large/006tNbRwly1fxda6k9k3bj30oy08cjsx.jpg"  /> 
 <br/>
 
 [![Build Status](https://travis-ci.org/crossoverJie/cicada.svg?branch=master)](https://travis-ci.org/crossoverJie/cicada)
@@ -27,13 +27,13 @@
 
 - [x] 代码简洁，没有过多依赖。
 - [x] 一行代码即可启动 HTTP 服务。
-- [x] 自定义拦截器。
+- [x] [自定义拦截器](#自定义拦截器)。
 - [x] 灵活的传参方式。
 - [x] `json` 响应格式。
-- [x] 自定义配置。
+- [x] [自定义配置](#自定义配置)。
 - [x] 多种响应方式。
 - [x] 内置可插拔 `IOC` 容器。
-- [ ] `Cookie` 支持。
+- [x] [`Cookie` 支持](#cookie-支持)。
 - [ ] 文件上传。
 
 
@@ -45,7 +45,7 @@
 <dependency>
     <groupId>top.crossoverjie.opensource</groupId>
     <artifactId>cicada-core</artifactId>
-    <version>2.0.0</version>
+    <version>x.y.z</version>
 </dependency>
 ```
 
@@ -110,22 +110,51 @@ public class RouteAction {
 通过 `context.json(),context.text()` 方法可以选择不同的响应方式。
 
 ```java
-@CicadaAction("textAction")
-public class TextAction implements WorkAction {
-    @Override
-    public void execute(CicadaContext context, Param param) throws Exception {
+@CicadaAction("routeAction")
+public class RouteAction {
+
+    private static final Logger LOGGER = LoggerBuilder.getLogger(RouteAction.class);
+
+    @CicadaRoute("getUser")
+    public void getUser(DemoReq req){
+
+        LOGGER.info(req.toString());
+        WorkRes<DemoReq> reqWorkRes = new WorkRes<>() ;
+        reqWorkRes.setMessage("hello =" + req.getName());
+        CicadaContext.getContext().json(reqWorkRes) ;
+    }
+    
+    @CicadaRoute("hello")
+    public void hello() throws Exception {
+        CicadaContext context = CicadaContext.getContext();
+
         String url = context.request().getUrl();
         String method = context.request().getMethod();
         context.text("hello world url=" + url + " method=" + method);
-    }
+    }    
+
+
 }
 ```
 
-![](https://ws1.sinaimg.cn/large/006tNbRwly1fvxvvo8yioj313i0tudij.jpg)
 
-同时也可以根据 `context.request()` 获得请求上下文中的其他信息。
+## Cookie 支持
 
-![](https://ws2.sinaimg.cn/large/006tNbRwly1fvxvxmpsjcj30yy0yo77h.jpg)
+### 设置 Cookie
+
+```java
+Cookie cookie = new Cookie() ;
+cookie.setName("cookie");
+cookie.setValue("value");
+CicadaContext.getResponse().setCookie(cookie);
+```
+
+### 获取 Cookie
+
+```java
+Cookie cookie = CicadaContext.getRequest().getCookie("cookie");
+logger.info("cookie = " + cookie.toString());
+```
 
 ## 自定义配置
 
@@ -201,8 +230,9 @@ public class ExecuteTimeInterceptor implements CicadaInterceptor {
     private Long end;
 
     @Override
-    public void before(Param param) {
+    public boolean before(Param param) {
         start = System.currentTimeMillis();
+        return true;
     }
 
     @Override
@@ -214,23 +244,6 @@ public class ExecuteTimeInterceptor implements CicadaInterceptor {
 }
 ```
 
-### 拦截适配器
-
-同样也可以只实现其中一个方法，只需要继承 `top.crossoverjie.cicada.server.intercept.AbstractCicadaInterceptorAdapter` 抽象类。
-
-```java
-@Interceptor(value = "loggerInterceptor")
-public class LoggerInterceptorAbstract extends AbstractCicadaInterceptorAdapter {
-
-    private static final Logger LOGGER = LoggerBuilder.getLogger(LoggerInterceptorAbstract.class) ;
-
-    @Override
-    public void before(Param param) {
-        LOGGER.info("logger param=[{}]",param.toString());
-    }
-
-}
-```
 
 ## 性能测试
 
@@ -241,6 +254,10 @@ public class LoggerInterceptorAbstract extends AbstractCicadaInterceptorAdapter 
 **每秒将近 10W 请求。**
 
 ## 更新记录
+
+### v2.0.1
+- 更新 Logo ,美化日志。
+- 支持 `Cookie`
 
 ### v2.0.0
 - 修复 [#12](https://github.com/TogetherOS/cicada/issues/12) [#22](https://github.com/TogetherOS/cicada/issues/22) [#28](28)
